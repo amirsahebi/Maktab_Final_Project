@@ -1,0 +1,11 @@
+{% extends "theme.html" %}
+
+{% block content %}
+{% for post in category.post.all %}
+<ul>
+    <li>
+        <a href="{{ post.get_absolute_url }}">{{ post.name }}</a>
+    </li>
+</ul>
+{% endfor %}
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "theme.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="col-md-12 my-3">
+            <form action="{% url 'delete-category' slug=category.slug %}" method="post">
+                {% csrf_token %}
+                
+                <p>Are you serious to delete {{category.name}}</p>
+                {{ form.as_p }}
+                <input type="submit" value="Yes,I'm sure">
+                <a href="{%url 'category_list' %}">Back to main page</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock content %}
