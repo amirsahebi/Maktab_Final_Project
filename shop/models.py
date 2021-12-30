@@ -75,7 +75,7 @@ class Tag(models.Model):
         return reverse('tag_detail', kwargs={'id': self.pk})
     
     def __str__(self):
-        return self.name
+        return self.title
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
