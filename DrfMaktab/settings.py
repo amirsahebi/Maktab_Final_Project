@@ -85,9 +85,15 @@ WSGI_APPLICATION = 'DrfMaktab.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+<<<<<<< HEAD
         'NAME': 'myproject',
         'USER': 'myprojectuser',
         'PASSWORD': 'password',
+=======
+        'NAME': 'my_db',
+        'USER': 'hero',
+        'PASSWORD': 'my_db@123',
+>>>>>>> develop
         'HOST': 'localhost',
         'PORT': '',
     }
@@ -187,3 +193,8 @@ GRAPH_MODELS = {
   'all_applications': True,
   'group_models': True,
 }
+<<<<<<< HEAD
+=======
+
+AUTH_USER_MODEL = 'shop.CustomUser'
+>>>>>>> develop

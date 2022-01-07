@@ -2,6 +2,11 @@ from django.db import models
 from django.urls import reverse
 from uuslug import slugify
 from django.contrib.auth.models import User
+<<<<<<< HEAD
+=======
+
+from shop.models import CustomUser
+>>>>>>> develop
 # Create your models here.
 
 class Post(models.Model):
@@ -10,7 +15,11 @@ class Post(models.Model):
     caption = models.TextField()
     category = models.ManyToManyField('Category',related_name='post')
     tag = models.ManyToManyField('Tag',blank=True,related_name='post')
+<<<<<<< HEAD
     owner = models.ForeignKey(User,null=False, on_delete=models.CASCADE,verbose_name='post owner')
+=======
+    owner = models.ForeignKey(CustomUser,null=False, on_delete=models.CASCADE,verbose_name='post owner')
+>>>>>>> develop
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(null=False,unique=True)
 
@@ -56,4 +65,7 @@ class Tag(models.Model):
         return reverse('tag_detail', kwargs={'id': self.pk})
 
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> develop

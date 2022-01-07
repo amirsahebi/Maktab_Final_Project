@@ -1,12 +1,25 @@
 from django.db import models
+<<<<<<< HEAD
 from django.contrib.auth.models import User
+=======
+from django.contrib.auth.models import AbstractUser
+>>>>>>> develop
 from django.db import models
 from django.urls import reverse
 from uuslug import slugify
 
 
 # Create your models here.
+<<<<<<< HEAD
 class Shop(models.Model):
+=======
+
+USER_TYPE = (('Seller', 'seller'), ('Buyer', 'buyer'))
+class CustomUser(AbstractUser):
+    user_type = models.CharField(
+        max_length=10, choices=USER_TYPE, default='Seller')
+class Store(models.Model):
+>>>>>>> develop
     STATUS=(
         ("Published","Pub"),
         ("NotPublished","NotPub")
@@ -14,9 +27,17 @@ class Shop(models.Model):
     status = models.CharField(
         max_length = 20,
         choices = STATUS,
+<<<<<<< HEAD
         default = 'NotPub'
         )
     name = models.CharField(max_length=55)
+=======
+        default = 'NotPublished'
+        )
+    deleted = models.BooleanField(default=False)
+    name = models.CharField(max_length=55)
+    owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
+>>>>>>> develop
 
     def __str__(self):
         return self.name
@@ -24,7 +45,11 @@ class Shop(models.Model):
 
 
 class Product(models.Model):
+<<<<<<< HEAD
     shop = models.ForeignKey(Shop,on_delete=models.CASCADE)
+=======
+    shop = models.ForeignKey(Store,on_delete=models.CASCADE)
+>>>>>>> develop
     name = models.CharField(max_length=55)
     image = models.ImageField()
     caption = models.TextField()
@@ -75,6 +100,7 @@ class Tag(models.Model):
         return reverse('tag_detail', kwargs={'id': self.pk})
     
     def __str__(self):
+<<<<<<< HEAD
         return self.name
 
 class Cart(models.Model):
@@ -87,6 +113,25 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+=======
+        return self.title
+
+class Cart(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True)
+    is_paid = models.BooleanField(default=False)
+    accepted = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    
+    def get_absolute_url(self):
+        return reverse('orderdetail', kwargs={'id': self.pk})
+    
+    def __str__(self):
+        return self.user.username
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE,related_name='cartitem')
+>>>>>>> develop
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
 
@@ -95,4 +140,7 @@ class CartItem(models.Model):
     def __str__(self):
         return self.product.name
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> develop

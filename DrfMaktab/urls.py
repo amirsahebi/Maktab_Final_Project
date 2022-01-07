@@ -40,6 +40,11 @@ urlpatterns = [
     # path('api/user/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('api/user/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('admin/', admin.site.urls),
+<<<<<<< HEAD
     path('', include('post.urls')),
+=======
+    path('blog/', include('post.urls')),
+    path('shop/',include('shop.urls'))
+>>>>>>> develop
     # url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
