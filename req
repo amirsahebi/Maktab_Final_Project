@@ -1,8 +1,0 @@
-django-widget-tweaks
-pillow
-six
-django-uuslug
-Django>=3.0,<4.0
-psycopg2>=2.8
-
-
