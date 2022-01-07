@@ -98,7 +98,10 @@ class CreateProduct(View):
 
     def get(self, request, *args, **kwargs):
         form = ProductCreateForm()
-        shop = Store.objects.filter(owner__id = request.user.id,deleted = False)[0]
+        try:
+            shop = get_object_or_404(Store,owner__id = request.user.id,deleted = False)
+        except:
+            shop = 0
         allow = 1
         if shop and shop.status=="Published":
             allow = 0
@@ -152,6 +155,7 @@ class Orderlist(View):
             order.save()
         
         if self.request.POST.get('from-date') and self.request.POST.get('until-date'):
+            print(self.request.POST.get('from-date'))
             frome=self.request.POST.get('from-date')
             until=self.request.POST.get('until-date')
             orders=Cart.objects.filter(created_at__range=[frome, until]).order_by('-created_at')
@@ -179,7 +183,7 @@ class myRegister(View):
             if form.is_valid():
                 CustomUser.objects.create_user(
                     form.cleaned_data['username'], form.cleaned_data['email'], form.cleaned_data['password1'])
-                return redirect(reverse('dashboard'))
+                return redirect(reverse('login'))
 
 
 def login_user(request):

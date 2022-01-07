@@ -17,7 +17,7 @@ urlpatterns = [
     path('orderlist/<int:id>',login_required(OrderDetail.as_view(),login_url='login/'), name='orderdetail'),
     path('orderlist/',login_required(Orderlist.as_view(),login_url='login/'), name='orderlist'),
     path('logout/',login_required(logout,login_url='login/'), name='logout'),
-    path('register/', myRegister ,name="register"),
+    path('register/', myRegister.as_view() ,name="register"),
     path('login/', login_user ,name="login"),
 
 ]
