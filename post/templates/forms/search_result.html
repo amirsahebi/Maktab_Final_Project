@@ -1,0 +1,21 @@
+{% extends "theme.html" %}
+
+{% block content %}
+<form action="{% url 'search_results' %}" method="get">
+  <input name="q" type="text" placeholder="Search...">
+  <input type="submit">
+</form>
+
+
+{% if object_list %}
+<h1>Search Results</h1>
+
+<ul>
+  {% for post in object_list %}
+    <li>
+      {{ post.name }}, {{ post.state }}
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock content %}
