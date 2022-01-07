@@ -1,0 +1,17 @@
+{% extends "theme.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="col-md-12 my-3">
+            <form action="{% url 'delete-tag' id=tag.id %}" method="post">
+                {% csrf_token %}
+                
+                <p>Are you serious to delete {{tag.name}}</p>
+                {{ form.as_p }}
+                <input type="submit" value="Yes,I'm sure">
+                <a href="{%url 'tag_list' %}">Back to main page</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock content %}

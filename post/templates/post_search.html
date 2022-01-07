@@ -1,0 +1,8 @@
+{% extends "theme.html" %}
+
+{% block content %}
+<form action="GET" action="{% url 'search' %}">
+    <input name="q" type="text" placeholder="Search" value="{{ request.GET.q }}">
+    <input type="submit">
+</form>
+{% endblock content %}
