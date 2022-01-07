@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import *
 from django.utils.html import format_html
 # Register your models here.
@@ -9,6 +10,8 @@ admin.site.register(Comment)
 admin.site.register(Tag)
 admin.site.register(Cart)
 admin.site.register(CartItem)
+admin.site.register(CustomUser)
+
 
 
 
@@ -55,4 +58,4 @@ class ShopAdmin(admin.ModelAdmin):
     @admin.action(description='Mark selected stories as published')
     def make_published(modeladmin, request, queryset):
         queryset.update(status='Pub')
-admin.site.register(Shop,ShopAdmin)
+admin.site.register(Store,ShopAdmin)
