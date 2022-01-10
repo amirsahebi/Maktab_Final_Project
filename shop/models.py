@@ -1,8 +1,11 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
 from uuslug import slugify
+from django.db.models import F, Sum
+
 
 
 # Create your models here.
@@ -11,6 +14,7 @@ USER_TYPE = (('Seller', 'seller'), ('Buyer', 'buyer'))
 class CustomUser(AbstractUser):
     user_type = models.CharField(
         max_length=10, choices=USER_TYPE, default='Seller')
+    name = models.CharField(max_length=55,blank=True,default="-")
 class Store(models.Model):
     STATUS=(
         ("Published","Pub"),
@@ -35,8 +39,9 @@ class Product(models.Model):
     name = models.CharField(max_length=55)
     image = models.ImageField()
     caption = models.TextField()
-    category = models.ManyToManyField('Category',related_name='post')
-    tag = models.ManyToManyField('Tag',blank=True,related_name='post')
+    category = models.ManyToManyField('Category',related_name='product')
+    tag = models.ManyToManyField('Tag',blank=True,related_name='product')
+    cost = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(null=False,unique=True)
 
@@ -85,7 +90,7 @@ class Tag(models.Model):
         return self.title
 
 class Cart(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,related_name='cart')
     is_paid = models.BooleanField(default=False)
     accepted = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -96,6 +101,12 @@ class Cart(models.Model):
     
     def __str__(self):
         return self.user.username
+
+    @property
+    def total_price(self):
+        return self.cartitem.aggregate(
+            total_price=Sum(F('quantity') * F('product__cost'))
+        )['total_price'] or Decimal('0')
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE,related_name='cartitem')

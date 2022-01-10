@@ -1,5 +1,7 @@
+from decimal import Decimal
 from typing import OrderedDict
 from django import views
+from django.db.models import F, Sum
 from django.shortcuts import render
 from django.urls import reverse
 from django.shortcuts import render,redirect,get_object_or_404
@@ -10,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django.views import View
 from django.http import HttpResponseRedirect
 from django.db.models import Q
+import datetime
 
 # Create your views here.
 from django.views.generic import ListView, DetailView
@@ -26,9 +29,26 @@ class Dashboard(View):
     def get(self, request, *args, **kwargs):
         if Store.objects.filter(owner__id=request.user.id,deleted=False):
             shop = Store.objects.get(owner__id=request.user.id,deleted=False)
+            buyers = CustomUser.objects.filter(user_type="Buyer")
+            print(buyers)
+            buyers_detail=[]
+            for buyer in buyers:
+                buyers_detail.append({
+                    "name":buyer.name,
+                    "last_buy":(Cart.objects.filter(user=buyer,is_paid=True,accepted=True).order_by('-created_at')[0]).created_at,
+                    "carts_count":Cart.objects.filter(user=buyer,is_paid=True,accepted=True).count(),
+                    "total_cost":CartItem.objects.filter(cart__user=buyer).aggregate(total_price=Sum(F('quantity') * F('product__cost')))['total_price'] or Decimal('0'),
+                    "products_count":CartItem.objects.filter(cart__user=buyer).aggregate(total_count=Sum(F('quantity')))['total_count'] or Decimal('0')
+                })
+            print(buyers_detail)
+            orders_date = [0]*7
+            orders_count = [0]*7
+            for i in range(0,7):
+                orders_count[i] += Cart.objects.filter(created_at__range=[(datetime.date.today()-datetime.timedelta(days=i+1)).strftime("%Y-%m-%d"),(datetime.date.today()-datetime.timedelta(days=i)).strftime("%Y-%m-%d")]).count()
+                orders_date[i] = int((datetime.date.today()-datetime.timedelta(days=i+1)).strftime("%d"))
         else:
             shop=0
-        return render(request, self.template_name , {'shop': shop})
+        return render(request, self.template_name , {'shop': shop,'buyers_detail':buyers_detail,'orders_date':orders_date[::-1],'orders_count':orders_count[::-1]})
 
     def post(self, request, *args, **kwargs):
         form = ShopCreateForm(request.POST, request.FILES)

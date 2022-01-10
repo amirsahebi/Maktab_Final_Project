@@ -189,3 +189,5 @@ GRAPH_MODELS = {
 }
 
 AUTH_USER_MODEL = 'shop.CustomUser'
+
+TIME_ZONE = 'Asia/Tehran'
