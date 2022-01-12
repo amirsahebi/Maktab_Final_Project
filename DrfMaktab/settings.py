@@ -39,13 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'psycopg2',
-    # 'rest_framework',
-    # 'rest_framework_simplejwt',
-    # 'django_filters',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'django_filters',
     'post',
     'widget_tweaks',
     'shop',
     'django_extensions',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -108,6 +109,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        
     ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
