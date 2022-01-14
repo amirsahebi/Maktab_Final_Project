@@ -24,6 +24,18 @@ class Store(models.Model):
     deleted = models.BooleanField(default=False)
     name = models.CharField(max_length=55)
     owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
+    image = models.ImageField(default=0)
+    type = models.ForeignKey('StoreCategory',on_delete=models.CASCADE,null=True)
+
+
+    def __str__(self):
+        return self.name
+
+class Profile(models.Model):
+    name = models.CharField(max_length=55)
+    owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
+    image = models.ImageField(blank=True)
+
 
     def __str__(self):
         return self.name
@@ -33,12 +45,15 @@ class Store(models.Model):
 class Product(models.Model):
     shop = models.ForeignKey(Store,on_delete=models.CASCADE)
     name = models.CharField(max_length=55)
-    image = models.ImageField()
-    caption = models.TextField()
-    category = models.ManyToManyField('Category',related_name='post')
-    tag = models.ManyToManyField('Tag',blank=True,related_name='post')
+    image = models.ImageField(blank=True)
+    caption = models.TextField(blank=True)
+    category = models.ManyToManyField('Category',related_name='product',blank=True)
+    tag = models.ManyToManyField('Tag',blank=True,related_name='product')
+    cost = models.IntegerField(blank=True)
+    available_count= models.IntegerField(blank=True)
+    availablity=models.BooleanField(default=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    slug = models.SlugField(null=False,unique=True)
+    slug = models.SlugField(null=False,unique=True,blank=True)
 
 
     def __str__(self):
