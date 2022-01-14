@@ -1,3 +1,5 @@
+from dataclasses import fields
+from email import message
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import *
@@ -38,5 +40,60 @@ class UserSerializerLoginResponse(serializers.ModelSerializer):
         fields = ['refresh_token', 'access_token']
 
 
+class ShopCreateSerializer(serializers.ModelSerializer):
+    
+
+    class Meta : 
+        model = Store
+        fields = ['name','image','type']
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+
+    class Meta : 
+        model = Product
+        fields = ['name','image','caption','category','tag','slug','cost','available_count']
+
+class CartCreateSerializer(serializers.ModelSerializer):
+    
+
+    class Meta : 
+        model = Cart
+        fields = []
+
+class CartItemCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CartItem
+        fields = ["product"]
+
+class ProfileCreateSerializer(serializers.ModelSerializer):
+    
+
+    class Meta: 
+        model = Profile
+        fields = ['name','image']
+
+class CartPaySerializer(serializers.ModelSerializer):
+
+
+    class Meta: 
+        model = Cart
+        fields = ['pk']
+
+class CartSerializer(serializers.ModelSerializer):
+
+
+
+    class Meta: 
+        model = Cart
+        fields = ['pk','created_at']
+
+class UserSerializerRegisterResponse(serializers.ModelSerializer):
+    message = serializers.CharField()
+
+
+    class Meta:
+        model = CustomUser
+        fields = ['message']
 
 

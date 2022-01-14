@@ -97,7 +97,7 @@ class EditShop(View):
 
     def post(self, request, *args, **kwargs):
         shop = Store.objects.get(owner=request.user,deleted=False)
-        form = ShopCreateForm(request.POST,instance=shop)
+        form = ShopCreateForm(request.POST,request.FILES,instance=shop)
         if form.is_valid():
             n = form.save()
             n.status='NotPublished'

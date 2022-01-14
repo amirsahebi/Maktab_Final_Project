@@ -65,11 +65,15 @@
                             </div>
                             <div class="col-12 ">
                                 <div class="content-section pt-5 pb-5">
-                                    <form action="{% url 'editshop' %}" method='post'>
+                                    <form action="{% url 'editshop' %}" enctype="multipart/form-data" method='post'>
                                         {% csrf_token %}
                                           <div class="form-group">
                                             <label for="exampleInputEmail1">نام فروشگاه:</label>
                                             <label for="{{ form.name.id_for_label }}"></label> {% render_field form.name class+="form-control" id="exampleInputEmail1" placeholder="نام فروشگاه" %}
+                                          </div>
+                                          <div class="form-group">
+                                            <label for="exampleInputEmail1">تصویر فروشگاه:</label>
+                                            <label for="{{ form.image.id_for_label }}"></label> {% render_field form.image class+="" id="exampleInputEmail1" %}
                                           </div>
                                         <div class="box-footer text-center">
                                           <button type="submit" class="btn btn-primary text-center btn-round">ثبت ویرایش</button>

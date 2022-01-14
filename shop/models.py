@@ -1,4 +1,5 @@
 from decimal import Decimal
+from email.policy import default
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -28,6 +29,18 @@ class Store(models.Model):
     deleted = models.BooleanField(default=False)
     name = models.CharField(max_length=55)
     owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
+    image = models.ImageField(default=0)
+    type = models.ForeignKey('StoreCategory',on_delete=models.CASCADE,null=True)
+
+
+    def __str__(self):
+        return self.name
+
+class Profile(models.Model):
+    name = models.CharField(max_length=55)
+    owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
+    image = models.ImageField()
+
 
     def __str__(self):
         return self.name
@@ -42,6 +55,8 @@ class Product(models.Model):
     category = models.ManyToManyField('Category',related_name='product')
     tag = models.ManyToManyField('Tag',blank=True,related_name='product')
     cost = models.IntegerField()
+    available_count= models.IntegerField()
+    availablity=models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(null=False,unique=True)
 
@@ -54,6 +69,10 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.name = slugify(self.name, self)
+        if self.available_count==0:
+            self.availablity=False
+        else:
+            self.availablity=True
         super(Product, self).save(*args, **kwargs)
 
 
@@ -92,7 +111,7 @@ class Tag(models.Model):
 class Cart(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,related_name='cart')
     is_paid = models.BooleanField(default=False)
-    accepted = models.BooleanField(default=True)
+    accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     
@@ -113,8 +132,18 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
 
-       
-
     def __str__(self):
         return self.product.name
 
+    def save(self, *args, **kwargs):
+        if self.quantity==0:
+            self.delete()
+            return 0
+        super(CartItem, self).save(*args, **kwargs)
+
+class StoreCategory(models.Model):
+    name = models.CharField(max_length=35)
+
+
+    def __str__(self):
+        return self.name

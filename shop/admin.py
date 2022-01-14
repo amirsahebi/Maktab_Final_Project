@@ -11,6 +11,8 @@ admin.site.register(Tag)
 admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(CustomUser)
+admin.site.register(StoreCategory)
+admin.site.register(Profile)
 
 
 

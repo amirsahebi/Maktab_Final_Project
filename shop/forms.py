@@ -8,7 +8,7 @@ class ShopCreateForm(forms.ModelForm):
 
     class Meta : 
         model = Store
-        fields = ['name']
+        fields = ['name','image']
 
 class ProductCreateForm(forms.ModelForm):
 
