@@ -13,6 +13,8 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+import DrfMaktab
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -193,3 +195,4 @@ GRAPH_MODELS = {
 AUTH_USER_MODEL = 'shop.CustomUser'
 
 TIME_ZONE = 'Asia/Tehran'
+

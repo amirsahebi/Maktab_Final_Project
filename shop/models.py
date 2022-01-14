@@ -39,7 +39,7 @@ class Store(models.Model):
 class Profile(models.Model):
     name = models.CharField(max_length=55)
     owner = models.ForeignKey('CustomUser',on_delete=models.CASCADE,null=False)
-    image = models.ImageField()
+    image = models.ImageField(blank=True)
 
 
     def __str__(self):
@@ -50,15 +50,15 @@ class Profile(models.Model):
 class Product(models.Model):
     shop = models.ForeignKey(Store,on_delete=models.CASCADE)
     name = models.CharField(max_length=55)
-    image = models.ImageField()
-    caption = models.TextField()
-    category = models.ManyToManyField('Category',related_name='product')
+    image = models.ImageField(blank=True)
+    caption = models.TextField(blank=True)
+    category = models.ManyToManyField('Category',related_name='product',blank=True)
     tag = models.ManyToManyField('Tag',blank=True,related_name='product')
-    cost = models.IntegerField()
-    available_count= models.IntegerField()
-    availablity=models.BooleanField(default=True)
+    cost = models.IntegerField(blank=True)
+    available_count= models.IntegerField(blank=True)
+    availablity=models.BooleanField(default=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    slug = models.SlugField(null=False,unique=True)
+    slug = models.SlugField(null=False,unique=True,blank=True)
 
 
     def __str__(self):

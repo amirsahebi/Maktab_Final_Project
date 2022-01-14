@@ -25,32 +25,6 @@ from drf_yasg.utils import swagger_auto_schema
 from shop.serializers import  CartCreateSerializer, CartItemCreateSerializer, CartPaySerializer, CartSerializer, ProductCreateSerializer, ProfileCreateSerializer, ShopCreateSerializer, UserSerializer, UserSerializerLogin, UserSerializerLoginResponse, UserSerializerRegisterResponse
 
 
-# @APIView(["POST"])
-# def Register_Users(request):
-#     try:
-#         data = []
-#         serializer = RegistrationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             account = serializer.save()
-#             account.is_active = True
-#             account.save()
-#             data["message"] = "user registered successfully"
-#             data["email"] = account.email
-#             data["username"] = account.username
-
-#         else:
-#             data = serializer.errors
-
-
-#         return Response(data)
-#     except IntegrityError as e:
-#         account=CustomUser.objects.get(username='')
-#         account.delete()
-#         raise ValidationError({"400": f'{str(e)}'})
-
-#     except KeyError as e:
-#         print(e)
-#         raise ValidationError({"400": f'Field {str(e)} missing'})
 
 @swagger_auto_schema(responses={201:UserSerializerRegisterResponse})
 class CreateUserView(CreateAPIView):
@@ -65,7 +39,9 @@ class CreateUserView(CreateAPIView):
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
+            user = self.perform_create(serializer)
+            user.user_type="Buyer"
+            user.save()
             headers = self.get_success_headers(serializer.data)
             return Response({"message":"user registered successfully"}, status=status.HTTP_201_CREATED, headers=headers)
         except IntegrityError as e:
@@ -78,40 +54,7 @@ class CreateUserView(CreateAPIView):
             raise ValidationError({"400": f'Field {str(e)} missing'})
 
     def perform_create(self, serializer):
-        serializer.save(user_type="Buyer")
-
-
-
-# class LoginTokenObtainPairSerializer(TokenObtainSerializer):
-#     @classmethod
-#     def get_token(cls, user):
-#         return RefreshToken.for_user(user)
-
-#     def validate(self, attrs):
-#         if attrs['user_type'] != 'Seller':
-#             return Response({"message":"user is not seller"}, status=status.HTTP_400_BAD_REQUEST)
-#         data = super().validate(attrs)
-#         authenticate_kwargs = {
-#             self.username_field: attrs[self.username_field],
-#             'password': attrs['password'],
-#         }
-
-#         refresh = self.get_token(self.user)
-
-#         data['refresh'] = str(refresh)
-#         data['access'] = str(refresh.access_token)
-#         data['message'] = "user loged in successfully"
-
-#         if api_settings.UPDATE_LAST_LOGIN:
-#             update_last_login(None, self.user)
-
-#         return data
-
-
-# class LoginUserView(TokenViewBase):
-#     serializer_class = LoginTokenObtainPairSerializer
-
-
+        return serializer.save()
 
 
 class LoginUserView(GenericAPIView):
@@ -163,7 +106,7 @@ class LoginUserView(GenericAPIView):
 class profile(RetrieveUpdateAPIView,CreateAPIView):
     permission_classes = (IsAuthenticated,)
     def get_queryset(self):
-        self.kwargs["pk"]=1
+        self.kwargs["pk"]=(Profile.objects.filter(owner=self.request.user)[0]).pk
         return Profile.objects.filter(owner=self.request.user)
     serializer_class = ProfileCreateSerializer
 
@@ -271,6 +214,10 @@ class paycart(GenericAPIView):
             livecart=Cart.objects.get(user=self.request.user,is_paid=False)
             livecart.is_paid=True
             livecart.save()
+            for cartitem in CartItem.objects.filter(cart=livecart):
+                product = Product.objects.get(pk=cartitem.product.id)
+                product.available_count -= cartitem.quantity
+                product.save()
             return Response({'message':'Cart has paid successfully'})
         else:
             return Response({'message':'There is no livecart'})

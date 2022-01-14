@@ -30,17 +30,16 @@ class Dashboard(View):
         if Store.objects.filter(owner__id=request.user.id,deleted=False):
             shop = Store.objects.get(owner__id=request.user.id,deleted=False)
             buyers = CustomUser.objects.filter(user_type="Buyer")
-            print(buyers)
             buyers_detail=[]
             for buyer in buyers:
-                buyers_detail.append({
-                    "name":buyer.name,
-                    "last_buy":(Cart.objects.filter(user=buyer,is_paid=True,accepted=True).order_by('-created_at')[0]).created_at,
-                    "carts_count":Cart.objects.filter(user=buyer,is_paid=True,accepted=True).count(),
-                    "total_cost":CartItem.objects.filter(cart__user=buyer).aggregate(total_price=Sum(F('quantity') * F('product__cost')))['total_price'] or Decimal('0'),
-                    "products_count":CartItem.objects.filter(cart__user=buyer).aggregate(total_count=Sum(F('quantity')))['total_count'] or Decimal('0')
-                })
-            print(buyers_detail)
+                if Cart.objects.filter(user=buyer,is_paid=True,accepted=True):
+                    buyers_detail.append({
+                        "name":buyer.name,
+                        "last_buy":(Cart.objects.filter(user=buyer,is_paid=True,accepted=True).order_by('-created_at')[0]).created_at,
+                        "carts_count":Cart.objects.filter(user=buyer,is_paid=True,accepted=True).count(),
+                        "total_cost":CartItem.objects.filter(cart__user=buyer).aggregate(total_price=Sum(F('quantity') * F('product__cost')))['total_price'] or Decimal('0'),
+                        "products_count":CartItem.objects.filter(cart__user=buyer).aggregate(total_count=Sum(F('quantity')))['total_count'] or Decimal('0')
+                    })
             orders_date = [0]*7
             orders_count = [0]*7
             for i in range(0,7):
