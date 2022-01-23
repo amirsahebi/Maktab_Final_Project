@@ -65,11 +65,15 @@
                             </div>
                             <div class="col-12 ">
                                 <div class="content-section pt-5 pb-5">
-                                    <form action="{% url 'editshop' %}" method='post'>
+                                    <form action="{% url 'editshop' %}" enctype="multipart/form-data" method='post'>
                                         {% csrf_token %}
                                           <div class="form-group">
                                             <label for="exampleInputEmail1">نام فروشگاه:</label>
                                             <label for="{{ form.name.id_for_label }}"></label> {% render_field form.name class+="form-control" id="exampleInputEmail1" placeholder="نام فروشگاه" %}
+                                          </div>
+                                          <div class="form-group">
+                                            <label for="exampleInputEmail1">تصویر فروشگاه:</label>
+                                            <label for="{{ form.image.id_for_label }}"></label> {% render_field form.image class+="" id="exampleInputEmail1" %}
                                           </div>
                                         <div class="box-footer text-center">
                                           <button type="submit" class="btn btn-primary text-center btn-round">ثبت ویرایش</button>
@@ -93,13 +97,8 @@
                             </div>
                             <div class="profile-box-username">{{request.user.username}}</div>
                             <div class="profile-box-tabs">
-                                <a href="password-change.html" class="profile-box-tab profile-box-tab-access">
-                                    <i class="now-ui-icons ui-1_lock-circle-open"></i>
-                                    تغییر رمز
-                                </a>
-                                <a href="{% url 'logout' %}" class="profile-box-tab profile-box-tab--sign-out">
-                                    <i class="now-ui-icons media-1_button-power"></i>
-                                    خروج از حساب
+                                <a href="{% url 'logout' %}" class="border-left-0 profile-box-tab profile-box-tab--sign-out">
+                                    <i class="now-ui-icons media-1_button-power"></i> خروج از حساب
                                 </a>
                             </div>
                         </div>

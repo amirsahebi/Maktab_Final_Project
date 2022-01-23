@@ -41,23 +41,28 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'psycopg2',
-    # 'rest_framework',
-    # 'rest_framework_simplejwt',
-    # 'django_filters',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'django_filters',
     'post',
     'widget_tweaks',
     'shop',
     'django_extensions',
+    'drf_yasg',
+    'rest_pyotp',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.cache.UpdateCacheMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'DrfMaktab.urls'
@@ -110,6 +115,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        
     ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
@@ -193,4 +199,14 @@ GRAPH_MODELS = {
 AUTH_USER_MODEL = 'shop.CustomUser'
 
 TIME_ZONE = 'Asia/Tehran'
+
+CACHE_MIDDLEWARE_ALIAS = 'default'  # which cache alias to use
+CACHE_MIDDLEWARE_SECONDS = '300'    # number of seconds to cache a page for (TTL)
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
+
+AUTHENTICATION_BACKENDS = (
+       'shop.backends.PhoneBuyerBackend',
+       'shop.backends.PhoneSellerBackend',
+       'django.contrib.auth.backends.ModelBackend',
+      )
 

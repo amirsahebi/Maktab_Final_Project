@@ -40,6 +40,8 @@ class ApiTestCase(APITestCase):
         
         self.assertEqual(resp.status_code,200)
         self.assertEqual(resp2.status_code,200)
+        self.assertEqual(resp3.status_code,200)
+
 
     
     def test_cart(self):
@@ -60,11 +62,11 @@ class ApiTestCase(APITestCase):
 
       #test_deletecartitem
 
-        resp3 = self.client.post(reverse('addtocart'),data={
+        resp3 = self.client.post(reverse('deletecartitem'),data={
             "product":self.product.pk
         })
 
-        self.assertEqual(resp3.status_code,201)
+        self.assertEqual(resp3.status_code,200)
 
       #test_paycart
 

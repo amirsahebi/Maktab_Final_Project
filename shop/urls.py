@@ -3,7 +3,7 @@ from django.urls import path
 from django.urls.resolvers import URLPattern
 
 
-from shop.views import login_user, myRegister
+from shop.views import login_user, logout_view, myRegister
 from shop.views import CreateShop, Dashboard, DeleteShop, EditShop, CreateProduct, OrderDetail, Orderlist
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -16,7 +16,7 @@ urlpatterns = [
     path('createproduct/',login_required(CreateProduct.as_view(),login_url='login/'), name='createproduct'),
     path('orderlist/<int:id>',login_required(OrderDetail.as_view(),login_url='login/'), name='orderdetail'),
     path('orderlist/',login_required(Orderlist.as_view(),login_url='login/'), name='orderlist'),
-    path('logout/',login_required(logout,login_url='login/'), name='logout'),
+    path('logout/',logout_view, name='logout'),
     path('register/', myRegister.as_view() ,name="register"),
     path('login/', login_user ,name="login"),
 

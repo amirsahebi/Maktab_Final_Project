@@ -1,8 +1,15 @@
+from decimal import Decimal
+from email.policy import default
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
 from uuslug import slugify
+from django.db.models import F, Sum
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.utils.translation import gettext_lazy as _
+
+
 
 
 # Create your models here.
@@ -11,6 +18,11 @@ USER_TYPE = (('Seller', 'seller'), ('Buyer', 'buyer'))
 class CustomUser(AbstractUser):
     user_type = models.CharField(
         max_length=10, choices=USER_TYPE, default='Seller')
+    name = models.CharField(max_length=55,blank=True,default="-")
+    phone = models.CharField(max_length=13,blank=True,default="-")
+    password = models.CharField(_('password'), max_length=128,blank=True)
+    token = models.IntegerField(default=0)
+    
 class Store(models.Model):
     STATUS=(
         ("Published","Pub"),
@@ -64,6 +76,10 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.name = slugify(self.name, self)
+        if self.available_count==0:
+            self.availablity=False
+        else:
+            self.availablity=True
         super(Product, self).save(*args, **kwargs)
 
 
@@ -100,10 +116,11 @@ class Tag(models.Model):
         return self.title
 
 class Cart(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,related_name='cart')
     is_paid = models.BooleanField(default=False)
-    accepted = models.BooleanField(default=True)
+    accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    shop = models.ForeignKey(Store,on_delete=models.CASCADE,null=False)
 
     
     def get_absolute_url(self):
@@ -112,13 +129,29 @@ class Cart(models.Model):
     def __str__(self):
         return self.user.username
 
+    @property
+    def total_price(self):
+        return self.cartitem.aggregate(
+            total_price=Sum(F('quantity') * F('product__cost'))
+        )['total_price'] or Decimal('0')
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE,related_name='cartitem')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
 
-       
-
     def __str__(self):
         return self.product.name
 
+    def save(self, *args, **kwargs):
+        if self.quantity==0:
+            self.delete()
+            return 0
+        super(CartItem, self).save(*args, **kwargs)
+
+class StoreCategory(models.Model):
+    name = models.CharField(max_length=35)
+
+
+    def __str__(self):
+        return self.name
