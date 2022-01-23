@@ -96,4 +96,24 @@ class UserSerializerRegisterResponse(serializers.ModelSerializer):
         model = CustomUser
         fields = ['message']
 
+class PhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=13)
 
+
+class PhoneUserSerializer(serializers.ModelSerializer):
+
+
+
+    def create(self, validated_data):
+
+        user = CustomUser.objects.create_user(
+            phone=validated_data['phone'],
+            username=validated_data['phone'],
+            token = validated_data['token']
+        )
+        return user
+
+    class Meta:
+        model = CustomUser
+        # Tuple of serialized model fields (see link [2])
+        fields = ['phone','token']

@@ -1,4 +1,10 @@
-
+from itertools import product
+import random
+import pyotp
+from django.core.cache import cache
+from rest_pyotp.views import PyotpViewset
+from django.http import response
+from django.urls import reverse
 from rest_framework.views import APIView
 from DrfMaktab import settings
 from rest_framework import generics
@@ -9,6 +15,7 @@ from rest_framework.response import Response
 from django.db import IntegrityError
 from rest_framework_simplejwt import serializers
 from rest_framework_simplejwt.views import TokenViewBase
+from shop.authentication import BuyerPermission
 from shop.filter import StoreListFilter, StoreProductListFilter
 from shop.models import Cart, CartItem, CustomUser, Product, Profile, Store, StoreCategory
 from rest_framework import status
@@ -21,12 +28,13 @@ from django.contrib.auth.signals import user_logged_in
 from rest_framework.decorators import action, api_view, permission_classes
 from django.contrib.auth.hashers import make_password , check_password
 from drf_yasg.utils import swagger_auto_schema
+import requests
  
-from shop.serializers import  CartCreateSerializer, CartItemCreateSerializer, CartPaySerializer, CartSerializer, ProductCreateSerializer, ProfileCreateSerializer, ShopCreateSerializer, UserSerializer, UserSerializerLogin, UserSerializerLoginResponse, UserSerializerRegisterResponse
+from shop.serializers import  CartCreateSerializer, CartItemCreateSerializer, CartPaySerializer, CartSerializer, PhoneSerializer, PhoneUserSerializer, ProductCreateSerializer, ProfileCreateSerializer, ShopCreateSerializer, UserSerializer, UserSerializerLogin, UserSerializerLoginResponse, UserSerializerRegisterResponse
 
 
 
-@swagger_auto_schema(responses={201:UserSerializerRegisterResponse})
+
 class CreateUserView(CreateAPIView):
     model = CustomUser
     serializer_class = UserSerializer
@@ -36,6 +44,7 @@ class CreateUserView(CreateAPIView):
         return super().post(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
+        #TODO
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -57,54 +66,9 @@ class CreateUserView(CreateAPIView):
         return serializer.save()
 
 
-class LoginUserView(GenericAPIView):
-
-    serializer_class = UserSerializerLogin
-    @swagger_auto_schema(responses={200:UserSerializerLoginResponse})
-    def post(self,request):
-
-        try:
-            username = request.data['username']
-            password = request.data['password']
-            
-            
-            user = CustomUser.objects.get(username=username)
-            if not check_password(password,user.password):
-                res = {
-                    'error': 'password is not true'}
-                return Response(res, status=status.HTTP_403_FORBIDDEN)
-            print(user.user_type)
-            if user and user.user_type == "Buyer":
-                try:
-                    refresh = TokenObtainPairSerializer.get_token(user)
-                    user_details = {}
-                    user_details['refresh'] = str(refresh)
-                    user_details['access'] = str(refresh.access_token)
-                    user_logged_in.send(sender=user.__class__,
-                                        request=request, user=user)
-                    return Response(user_details, status=status.HTTP_200_OK)
-
-                except Exception as e:
-                    raise e
-            elif user.user_type != "Buyer":
-                res = {
-                    'error': 'user in not Buyer'}
-                return Response(res, status=status.HTTP_403_FORBIDDEN)
-            else:
-                res = {
-                    'error': 'can not authenticate with the given credentials or the account has been deactivated'}
-                return Response(res, status=status.HTTP_403_FORBIDDEN)
-        except KeyError:
-            res = {'error': 'please provide a email and a password'}
-            return Response(res)
-        except CustomUser.DoesNotExist:
-            res = {'error': 'user does not exist'}
-            return Response(res)
-
-
 
 class profile(RetrieveUpdateAPIView,CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     def get_queryset(self):
         self.kwargs["pk"]=(Profile.objects.filter(owner=self.request.user)[0]).pk
         return Profile.objects.filter(owner=self.request.user)
@@ -127,25 +91,25 @@ class profile(RetrieveUpdateAPIView,CreateAPIView):
 
 
 class store(ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     queryset = Store.objects.filter(status="Published")
     filterset_class = StoreListFilter
     serializer_class = ShopCreateSerializer
 
 class storecategory(ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     queryset = StoreCategory.objects.all()
     serializer_class = ShopCreateSerializer
 
 class storeproduct(ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     def get_queryset(self):
         return Product.objects.filter(shop__pk=self.kwargs["id"],shop__deleted=False)
     serializer_class = ProductCreateSerializer
     filterset_class = StoreProductListFilter
     
 class createcart(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     serializer_class = CartItemCreateSerializer
 
     @swagger_auto_schema(responses={201:CartPaySerializer})
@@ -153,10 +117,11 @@ class createcart(CreateAPIView):
         return super().post(request, *args, **kwargs)
     
     def create(self, request, *args, **kwargs):
-        if not Cart.objects.filter(user=self.request.user,is_paid=False):
+        thisproduct = Product.objects.get(pk=self.request.data['product'])
+        if not Cart.objects.filter(shop=thisproduct.shop,user=self.request.user,is_paid=False):
             cart1 = CartCreateSerializer(data=request.data)
             cart1.is_valid(raise_exception=True)
-            cart2 = cart1.save(user=request.user)
+            cart2 = cart1.save(user=request.user,shop=thisproduct.shop)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(cart = cart2,quantity=1)
@@ -164,16 +129,21 @@ class createcart(CreateAPIView):
             return Response({'CartId':cart2.id}, status=status.HTTP_201_CREATED, headers=headers)
         else:
             livecart = Cart.objects.get(user=self.request.user,is_paid=False)
-            return Response({"message":"just can have on live cart per user","LiveCartId":livecart.id})
+            return Response({"message":"just can have one live cart per user for each shop","LiveCartId":livecart.id})
 
         
 
 class addtocart(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     serializer_class = CartItemCreateSerializer
     
     def create(self, request, *args, **kwargs):
-        livecart = Cart.objects.get(user=self.request.user,is_paid=False)
+        thisproduct = Product.objects.get(pk=self.request.data['product'])
+        livecart = Cart.objects.filter(shop=thisproduct.shop,user=self.request.user,is_paid=False)
+        if livecart[0]:
+            livecart=livecart[0]
+        else:
+            Response({"Error":"There is no live cart for this user in this shop"})
         if CartItem.objects.filter(cart=livecart,product=request.data['product']):
             item = CartItem.objects.get(cart=livecart,product=request.data['product'])
             item.quantity += 1
@@ -187,7 +157,7 @@ class addtocart(CreateAPIView):
 
 
 class deletecartitem(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission)
     serializer_class = CartItemCreateSerializer
     
     def create(self, request, *args, **kwargs):
@@ -208,6 +178,8 @@ class deletecartitem(CreateAPIView):
 
 class paycart(GenericAPIView):
 
+    permission_classes = (IsAuthenticated,BuyerPermission,)
+
     
     def post(self,request):
         if Cart.objects.filter(user=self.request.user,is_paid=False):
@@ -224,13 +196,66 @@ class paycart(GenericAPIView):
 
 
 class paidcart(ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,BuyerPermission,)
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user,is_paid=True)
     serializer_class = CartSerializer
 
 
+class Otp():
+    def generate_totp():
         
+        otp = random.randint(100000, 999999)
+
+        return otp
+
+
+class sendcode(GenericAPIView):
+
+    serializer_class = PhoneSerializer
+
+    def post(self,request):
+        phone = PhoneSerializer(request.data)
+        totp = Otp.generate_totp()
+        cache.set('totp',totp,300)
+        body = {'receptor':phone.data["phone"],'token':totp,'template':"verify"}
+        # sms_res = requests.get("https://api.kavenegar.com/v1/73577961477A66706C7A304A634E4D4145646C5437795A375833674E5A67754478416276584462787374413D/verify/lookup.json",params=body)
+        # if sms_res.json()['return']['status']==200:
+        #     return Response(sms_res.json())
+        # else:
+        #     return Response(sms_res.json(),status=status.HTTP_401_UNAUTHORIZED)
+        return Response(body)
+    
+
+class CreatePhoneUserView(CreateAPIView):
+    model = CustomUser
+    serializer_class = PhoneUserSerializer
+
+    @swagger_auto_schema(responses={201:UserSerializerRegisterResponse})
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(cache.get("totp"))
+        if serializer.validated_data['token'] == cache.get("totp") :
+            if not CustomUser.objects.filter(phone=serializer.validated_data['phone']):
+                user = self.perform_create(serializer)
+                user.user_type="Buyer"
+                user.save()
+                headers = self.get_success_headers(serializer.data)
+                return Response({"message":"user registered successfully"}, status=status.HTTP_201_CREATED, headers=headers)
+            else:
+                headers = self.get_success_headers(serializer.data)
+                return Response({"message":"A user has registered with this phone number!"}, status=status.HTTP_401_UNAUTHORIZED, headers=headers)
+        else:
+            headers = self.get_success_headers(serializer.data)
+            return Response({"message":"token is wrong or expired!"}, status=status.HTTP_401_UNAUTHORIZED, headers=headers)
+
+    def perform_create(self, serializer):
+        return serializer.save()
+
 
 
 

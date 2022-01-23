@@ -46,4 +46,6 @@ urlpatterns = [
     path('blog/', include('post.urls')),
     path('shop/',include('shop.urls')),
     path('api-shop/',include('shop.api_urls')),
+    url('', include('rest_pyotp.routers')),
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

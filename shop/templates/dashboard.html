@@ -150,10 +150,7 @@
                             </div>
                             <div class="profile-box-username">{{request.user.username}}</div>
                             <div class="profile-box-tabs">
-                                <a href="password-change.html" class="profile-box-tab profile-box-tab-access">
-                                    <i class="now-ui-icons ui-1_lock-circle-open"></i> تغییر رمز
-                                </a>
-                                <a href="{% url 'logout' %}?next=/shop/login/" class="profile-box-tab profile-box-tab--sign-out">
+                                <a href="{% url 'logout' %}" class="border-left-0 profile-box-tab profile-box-tab--sign-out">
                                     <i class="now-ui-icons media-1_button-power"></i> خروج از حساب
                                 </a>
                             </div>

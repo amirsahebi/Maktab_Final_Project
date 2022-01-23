@@ -6,6 +6,9 @@ from django.db import models
 from django.urls import reverse
 from uuslug import slugify
 from django.db.models import F, Sum
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.utils.translation import gettext_lazy as _
+
 
 
 
@@ -16,6 +19,10 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(
         max_length=10, choices=USER_TYPE, default='Seller')
     name = models.CharField(max_length=55,blank=True,default="-")
+    phone = models.CharField(max_length=13,blank=True,default="-")
+    password = models.CharField(_('password'), max_length=128,blank=True)
+    token = models.IntegerField(default=0)
+    
 class Store(models.Model):
     STATUS=(
         ("Published","Pub"),
@@ -113,6 +120,7 @@ class Cart(models.Model):
     is_paid = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    shop = models.ForeignKey(Store,on_delete=models.CASCADE,null=False)
 
     
     def get_absolute_url(self):
