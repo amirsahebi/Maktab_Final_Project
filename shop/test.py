@@ -24,6 +24,15 @@ class ApiTestCase(APITestCase):
         self.cart = mommy.make(Cart,user=self.user)
         self.client.force_authenticate(user=self.user)
 
+    def test_register(self):
+      # right input
+        resp = self.client.post(reverse('api-register'),{'username':'testperson','email':'testperson@gmail.com','password':'test1234'})
+      # wrong input
+        resp2 = self.client.post(reverse('api-register'),{'username':'testperson','email':'testperson@gmail.com','password':'test1'})
+
+        self.assertEqual(resp.status_code,201)
+        self.assertEqual(resp2.status_code,400)
+
 
     def test_profile(self):
         resp = self.client.get(reverse('profile'))
@@ -50,7 +59,7 @@ class ApiTestCase(APITestCase):
             "product":self.product.pk
         })
 
-        self.assertEqual(resp.status_code,200)
+        self.assertEqual(resp.status_code,201)
 
       #test_addtocart
 
@@ -65,8 +74,9 @@ class ApiTestCase(APITestCase):
         resp3 = self.client.post(reverse('deletecartitem'),data={
             "product":self.product.pk
         })
+        
 
-        self.assertEqual(resp3.status_code,200)
+        self.assertEqual(resp3.status_code,201)
 
       #test_paycart
 
@@ -99,7 +109,16 @@ class ApiTestCase(APITestCase):
 
         resp3 = self.client.get(reverse('storeproduct',kwargs={'id': 1}))
 
-        self.assertEqual(resp2.status_code,200)
+        self.assertEqual(resp3.status_code,200)
+
+    def test_sms(self):
+
+        resp = self.client.post(reverse('sendcode'),data={'phone':'09123456789'})
+
+        resp2 = self.client.post(reverse('phone-api-register'),data={'phone':'09123456789','token':resp.data['token']})
+
+        self.assertEqual(resp.status_code,200)
+        self.assertEqual(resp2.status_code,201)
 
 
 

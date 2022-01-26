@@ -161,7 +161,8 @@ class deletecartitem(CreateAPIView):
     serializer_class = CartItemCreateSerializer
     
     def create(self, request, *args, **kwargs):
-        livecart = Cart.objects.get(user=self.request.user,is_paid=False)
+        thisproduct = Product.objects.get(pk=self.request.data['product'])
+        livecart = Cart.objects.get(shop=thisproduct.shop,user=self.request.user,is_paid=False)
         if CartItem.objects.filter(cart=livecart,product=request.data['product']):
             item = CartItem.objects.get(cart=livecart,product=request.data['product'])
             item.quantity -= 1
@@ -171,10 +172,10 @@ class deletecartitem(CreateAPIView):
                 return Response({'CartId':livecart.id}, status=status.HTTP_201_CREATED, headers=headers)
             else:
                 livecart.delete()
-                return Response({'message':'live cart deleted because it was empty'})
+                return Response({'message':'live cart deleted because it was empty'},status=status.HTTP_200_OK)
                 
         else:
-            return Response({'ERROR':'no such product to delete'})
+            return Response({'ERROR':'no such product to delete'},status=status.HTTP_401_UNAUTHORIZED)
 
 class paycart(GenericAPIView):
 
@@ -183,16 +184,17 @@ class paycart(GenericAPIView):
     
     def post(self,request):
         if Cart.objects.filter(user=self.request.user,is_paid=False):
-            livecart=Cart.objects.get(user=self.request.user,is_paid=False)
-            livecart.is_paid=True
-            livecart.save()
-            for cartitem in CartItem.objects.filter(cart=livecart):
-                product = Product.objects.get(pk=cartitem.product.id)
-                product.available_count -= cartitem.quantity
-                product.save()
-            return Response({'message':'Cart has paid successfully'})
+            livecarts=Cart.objects.filter(user=self.request.user,is_paid=False)
+            for livecart in livecarts:
+                livecart.is_paid=True
+                livecart.save()
+                for cartitem in CartItem.objects.filter(cart=livecart):
+                    product = Product.objects.get(pk=cartitem.product.id)
+                    product.available_count -= cartitem.quantity
+                    product.save()
+                return Response({'message':'Cart has paid successfully'})
         else:
-            return Response({'message':'There is no livecart'})
+            return Response({'message':'There is no livecart'},status=status.HTTP_401_UNAUTHORIZED)
 
 
 class paidcart(ListAPIView):
@@ -217,14 +219,14 @@ class sendcode(GenericAPIView):
     def post(self,request):
         phone = PhoneSerializer(request.data)
         totp = Otp.generate_totp()
-        cache.set('totp',totp,300)
+        cache.set('totp',{'totp':totp,'phone':phone.data["phone"]},300)
         body = {'receptor':phone.data["phone"],'token':totp,'template':"verify"}
         # sms_res = requests.get("https://api.kavenegar.com/v1/73577961477A66706C7A304A634E4D4145646C5437795A375833674E5A67754478416276584462787374413D/verify/lookup.json",params=body)
         # if sms_res.json()['return']['status']==200:
         #     return Response(sms_res.json())
         # else:
         #     return Response(sms_res.json(),status=status.HTTP_401_UNAUTHORIZED)
-        return Response(body)
+        return Response(body,status=status.HTTP_200_OK)
     
 
 class CreatePhoneUserView(CreateAPIView):
@@ -238,8 +240,7 @@ class CreatePhoneUserView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        print(cache.get("totp"))
-        if serializer.validated_data['token'] == cache.get("totp") :
+        if serializer.validated_data['token'] == cache.get("totp")['totp'] and serializer.validated_data['phone'] == cache.get("totp")['phone']:
             if not CustomUser.objects.filter(phone=serializer.validated_data['phone']):
                 user = self.perform_create(serializer)
                 user.user_type="Buyer"
