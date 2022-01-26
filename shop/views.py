@@ -148,14 +148,6 @@ class OrderDetail(View):
 
         return render(request, self.template_name , {'cartitems': cartitems})
 
-    # def post(self, request, *args, **kwargs):
-    #     shop = Store.objects.get(owner=request.user,deleted=False)
-    #     form = ShopCreateForm(request.POST,instance=shop)
-    #     if form.is_valid():
-    #         n = form.save()
-    #         n.status='NotPublished'
-    #         n.save()
-    #         return HttpResponseRedirect(self.request.path_info)
 
 class Orderlist(View):
 
