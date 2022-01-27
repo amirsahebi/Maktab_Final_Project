@@ -30,12 +30,14 @@ class PhoneBuyerBackend(ModelBackend):
         try:
             # login with phone and token
             user = UserModel.objects.get(phone=username)
-            if user:
-                if not str(cache.get("totp")) == password and not check_password(password,user.password):
+            if user and cache.get("totp")['phone'] == username:
+                if not str(cache.get("totp")['totp']) == password and not check_password(password,user.password):
                     return None
                 if user.user_type == "Buyer":
                     return user
                 else:
                     return None
+            else:
+                return None
         except UserModel.DoesNotExist:
             return None 
